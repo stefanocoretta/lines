@@ -29,39 +29,42 @@ ui <- fluidPage(
       checkboxInput("raw",
               "Show raw data",
               FALSE),
+      h3("Group A"),
       sliderInput("intercept",
-            "Intercept:",
+            "Intercept (A):",
             min = -5,
             max = 5,
             value = 0),
       sliderInput("slope",
-            "Slope:",
+            "Slope (A):",
             min = -1,
             max = 3,
             step = 0.1,
             value = 1),
-      checkboxGroupInput("groups",
-                 "Groups:",
-                 c("Include groups" = "grp",
-                 "Include interaction" = "int"
-                 )
-                 ),
+      h3("Group B"),
+      checkboxInput("group_b",
+              "Include Group B?",
+              FALSE),
       sliderInput("intercept_b",
-            "Intercept (Group B):",
+            "Intercept (B):",
             min = -5,
             max = 5,
             value = 0),
       sliderInput("slope_b",
-            "Slope (Group B):",
+            "Slope (B):",
             min = -1,
             max = 3,
             step = 0.1,
             value = 1),
+      h3("Model formula"),
+      checkboxInput("interactions",
+              "Include the interaction X*Group?",
+              FALSE),
     ),
 
     # Show a plot of the generated distribution
     mainPanel(
-       plotOutput("linePlot")
+      plotOutput("linePlot")
     )
   )
 )
@@ -69,13 +72,14 @@ ui <- fluidPage(
 # Define server logic required to draw a histogram
 server <- function(input, output) {
   output$linePlot <- renderPlot({
+    set.seed(8788)
     n <- input$n
     x <- sample(seq(-5, 5, by = 0.01), n)
-    y_a <- input$intercept + input$slope * x[1:(n/2)] + rnorm(n/2, 0, 1)
-    if ("grp" %in% input$groups) {
-    y_b <- input$intercept_b + input$slope_b * x[((n/2)+1):n] + rnorm(n/2, 0, 1)
+    y_a <- input$intercept + input$slope * x[1:(n/2)] + rnorm(n/2, 0, 0.5)
+    if (input$group_b) {
+    y_b <- input$intercept_b + input$slope_b * x[((n/2)+1):n] + rnorm(n/2, 0, 0.5)
     } else {
-    y_b <- input$intercept + input$slope * x[((n/2)+1):n] + rnorm(n/2, 0, 1)
+    y_b <- input$intercept + input$slope * x[((n/2)+1):n] + rnorm(n/2, 0, 0.5)
     }
 
     group <- rep(c("A", "B"), each = n/2)
@@ -88,20 +92,21 @@ server <- function(input, output) {
     ggplot(tib, aes(x, y)) +
     geom_hline(yintercept = 0, linetype = "dashed") +
     geom_vline(xintercept = 0, linetype = "dashed") +
-    {if ("grp" %in% input$groups) aes(colour = group) } +
+    {if (input$group_b) aes(colour = group) } +
     {if (input$raw) geom_point(size = 5, alpha = 0.5) } +
     geom_abline(intercept = input$intercept, slope = input$slope, size = 2) +
     geom_point(aes(x = 0, y = input$intercept), size = 5, colour = "red") +
-    {if ("grp" %in% input$groups & !("int" %in% input$groups)) geom_abline(intercept = input$intercept_b, slope = input$slope, size = 2) } +
-    {if ("grp" %in% input$groups & "int" %in% input$groups) geom_abline(intercept = input$intercept_b, slope = input$slope_b, size = 2) } +
-    {if ("grp" %in% input$groups) geom_point(aes(x = 0, y = input$intercept_b), size = 5, colour = "blue") } +
+    {if (input$group_b & !input$interactions) geom_abline(intercept = input$intercept_b, slope = input$slope, size = 2) } +
+    {if (input$group_b & input$interactions) geom_abline(intercept = input$intercept_b, slope = input$slope_b, size = 2) } +
+    {if (input$group_b) geom_point(aes(x = 0, y = input$intercept_b), size = 5, colour = "blue") } +
     scale_x_continuous(breaks = seq(-5, 5), limits = c(-5, 5)) +
     scale_y_continuous(breaks = seq(-5, 5), limits = c(-5, 5)) +
-    labs(x = element_blank(), y = element_blank()) +
+    labs(x = "X", y = "Y") +
     coord_fixed() +
     theme_minimal() +
     theme(legend.position = "none")
-  })
+  },
+  height = 600, res = 100)
 }
 
 # Run the application
