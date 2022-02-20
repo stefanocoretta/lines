@@ -24,6 +24,7 @@ ui <- navbarPage(
     "Continuous",
     sidebarLayout(
       sidebarPanel(
+        h3("Continuous predictor (X)"),
         splitLayout(
           cellWidths = "50%",
           sliderInput("n",
@@ -68,6 +69,7 @@ ui <- navbarPage(
     "Categorical",
     sidebarLayout(
       sidebarPanel(
+        h3("Categorical predictor (Group)"),
         sliderInput("n_cat",
                     "Sample size:",
                     min = 50,
@@ -113,6 +115,7 @@ ui <- navbarPage(
     "Continuous + Categorical",
     sidebarLayout(
       sidebarPanel(
+        h3("Continuous (X) and categorical (Group) predictors"),
         splitLayout(
           cellWidths = "50%",
           sliderInput("n_cont_cat",
@@ -128,6 +131,7 @@ ui <- navbarPage(
                       value = 0.5,
                       step = 0.1)
         ),
+        h4("Group A"),
         splitLayout(
           cellWidths = "50%",
           sliderInput("int_a",
@@ -142,6 +146,7 @@ ui <- navbarPage(
                       step = 0.1,
                       value = 1)
         ),
+        h4("Group B"),
         splitLayout(
           cellWidths = "50%",
           sliderInput("int_b",
