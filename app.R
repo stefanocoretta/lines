@@ -44,16 +44,16 @@ ui <- navbarPage(
         splitLayout(
           cellWidths = "50%",
           sliderInput("intercept",
-                "Intercept:",
-                min = -5,
-                max = 5,
-                value = 0),
+                      "Intercept:",
+                      min = -5,
+                      max = 5,
+                      value = 0),
           sliderInput("slope",
-                "Slope:",
-                min = -1,
-                max = 3,
-                step = 0.1,
-                value = 1)
+                      "Slope:",
+                      min = -1,
+                      max = 3,
+                      step = 0.1,
+                      value = 1)
         ),
         checkboxInput("raw",
                       "Show raw data",
@@ -70,39 +70,29 @@ ui <- navbarPage(
     sidebarLayout(
       sidebarPanel(
         h3("Categorical predictor (Group)"),
+
         sliderInput("n_cat",
                     "Sample size:",
                     min = 50,
                     max = 250,
                     value = 150,
                     step = 10),
+        selectInput("coding",
+                    "Coding:",
+                    c("Treatment/dummy" = "treat", "Sum/effect" = "sum")),
         splitLayout(
           cellWidths = "50%",
-          sliderInput("mean_a",
-                      "Mean A:",
+          sliderInput("int_cat",
+                      "Intercept:",
                       min = -5,
                       max = 5,
                       value = 0),
-          sliderInput("sd_a",
-                      "SD A:",
-                      min = 0,
-                      max = 2,
-                      value = 1,
-                      step = 0.25)
-        ),
-        splitLayout(
-          cellWidths = "50%",
-          sliderInput("mean_b",
-                      "Mean B:",
-                      min = -5,
-                      max = 5,
-                      value = 0),
-          sliderInput("sd_b",
-                      "SD B:",
-                      min = 0,
-                      max = 2,
-                      value = 1,
-                      step = 0.25)
+          sliderInput("slope_cat",
+                      "Slope:",
+                      min = -3,
+                      max = 3,
+                      step = 0.5,
+                      value = 0)
         )
       ),
 
@@ -196,45 +186,45 @@ server <- function(input, output) {
     )
 
     ggplot(tib, aes(x, y)) +
-    # Axes
-    geom_hline(yintercept = 0, linetype = "dashed") +
-    geom_vline(xintercept = 0, linetype = "dashed") +
-    # Show raw data
-    {if (input$raw) geom_point(size = 3, alpha = 0.3) } +
-    # Regression line
-    geom_abline(intercept = the_intercept, slope = the_slope, size = 2) +
-    # Intercept
-    geom_segment(
-      x = -Inf, y = the_intercept, xend = 0, yend = the_intercept,
-      linetype = "dotted", colour = "#1b9e77"
-    ) +
-    # Slope
-    geom_segment(
-      x = 1, y = -Inf, xend = 1, yend = the_intercept + the_slope,
-      linetype = "dotted", colour = "#d95f02"
-    ) +
-    geom_segment(
-      x = 0, y = the_intercept, xend = 1, yend = the_intercept,
-      linetype = "dotted", colour = "#d95f02"
-    ) +
-    geom_segment(
-      x = -Inf, y = the_intercept + the_slope, xend = 1, yend = the_intercept + the_slope,
-      linetype = "dotted", colour = "#d95f02"
-    ) +
-    geom_segment(
-      x = 1, y = the_intercept, xend = 1, yend = the_intercept + the_slope,
-      size = 1, colour = "#d95f02"
-    ) +
-    # Intercept and slope points
-    geom_point(aes(x = 0, y = the_intercept), size = 5, colour = "#1b9e77") +
-    geom_point(aes(x = 1, y = the_intercept + the_slope), size = 5, colour = "#d95f02") +
-    # Plot settings
-    scale_x_continuous(breaks = the_seq, limits = the_limits) +
-    scale_y_continuous(breaks = the_seq, limits = the_limits) +
-    labs(x = "X", y = "Y") +
-    coord_fixed() +
-    theme_minimal() +
-    theme(legend.position = "none")},
+      # Axes
+      geom_hline(yintercept = 0, linetype = "dashed") +
+      geom_vline(xintercept = 0, linetype = "dashed") +
+      # Show raw data
+      {if (input$raw) geom_point(size = 3, alpha = 0.3) } +
+      # Regression line
+      geom_abline(intercept = the_intercept, slope = the_slope, size = 2) +
+      # Intercept
+      geom_segment(
+        x = -Inf, y = the_intercept, xend = 0, yend = the_intercept,
+        linetype = "dotted", colour = "#1b9e77"
+      ) +
+      # Slope
+      geom_segment(
+        x = 1, y = -Inf, xend = 1, yend = the_intercept + the_slope,
+        linetype = "dotted", colour = "#d95f02"
+      ) +
+      geom_segment(
+        x = 0, y = the_intercept, xend = 1, yend = the_intercept,
+        linetype = "dotted", colour = "#d95f02"
+      ) +
+      geom_segment(
+        x = -Inf, y = the_intercept + the_slope, xend = 1, yend = the_intercept + the_slope,
+        linetype = "dotted", colour = "#d95f02"
+      ) +
+      geom_segment(
+        x = 1, y = the_intercept, xend = 1, yend = the_intercept + the_slope,
+        size = 1, colour = "#d95f02"
+      ) +
+      # Intercept and slope points
+      geom_point(aes(x = 0, y = the_intercept), size = 5, colour = "#1b9e77") +
+      geom_point(aes(x = 1, y = the_intercept + the_slope), size = 5, colour = "#d95f02") +
+      # Plot settings
+      scale_x_continuous(breaks = the_seq, limits = the_limits) +
+      scale_y_continuous(breaks = the_seq, limits = the_limits) +
+      labs(x = "X", y = "Y") +
+      coord_fixed() +
+      theme_minimal() +
+      theme(legend.position = "none")},
 
     height = 600, res = 100
   )
@@ -243,22 +233,32 @@ server <- function(input, output) {
     set.seed(8788)
 
     n <- input$n_cat
-    mean_a <- input$mean_a
-    sd_a <- input$sd_a
-    mean_b <- input$mean_b
-    sd_b <- input$sd_b
-
-    y_a <- rnorm(n/2, mean_a, sd_a)
-    y_b <- rnorm(n/2, mean_b, sd_b)
-    group <- rep(c("A", "B"), each = n/2)
+    the_intercept <- input$int_cat
+    the_slope <- input$slope_cat
 
     tib <- tibble(
-      y = c(y_a, y_b),
-      group = group
+      group = rep(c("A", "B"), each = n/2),
+      group_treat = rep(c(0, 1), each = n/2),
+      group_sum = rep(c(1, -1), each = n/2),
+      y_treat = the_intercept + (the_slope * group_treat) + rnorm(n, 0, 0.5),
+      y_sum = the_intercept + (the_slope * group_sum) + rnorm(n, 0, 0.5)
     )
 
-    ggplot(tib, aes(group, y, colour = group)) +
-      geom_jitter(width = 0.2, size = 5, alpha = 0.5) +
+    if (input$coding == "treat") {
+      tib$y <- tib$y_treat
+    } else if (input$coding == "sum") {
+      tib$y <- tib$y_sum
+      the_a <- the_intercept + the_slope
+      the_b <- the_intercept - the_slope
+    }
+
+    ggplot(tib) +
+      geom_jitter(aes(group, y, colour = group), width = 0.2, size = 3, alpha = 0.3) +
+      {if (input$coding == "treat") geom_point(x = "A", y = the_intercept, size = 10, colour = "#1f78b4", shape = 18) } +
+      {if (input$coding == "treat") geom_point(x = "B", y = the_intercept + the_slope, size = 10, colour = "#33a02c", shape = 18) } +
+      {if (input$coding == "sum") geom_point(x = "A", y = the_a, size = 10, colour = "#1f78b4", shape = 18) } +
+      {if (input$coding == "sum") geom_point(x = "B", y = the_b, size = 10, colour = "#33a02c", shape = 18) } +
+      {if (input$coding == "sum") geom_point(x = 1.5, y = the_intercept, size = 5, colour = "#d95f02", shape = 16) } +
       scale_y_continuous(breaks = the_seq, limits = the_limits) +
       scale_color_manual(values = c("#1f78b4", "#33a02c")) +
       theme_minimal() +
