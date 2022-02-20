@@ -30,7 +30,7 @@ ui <- navbarPage(
                       value = 150,
                       step = 10),
           sliderInput("error",
-                      "Measurement error (SD):",
+                      "SD:",
                       min = 0,
                       max = 1,
                       value = 0.5,
@@ -110,50 +110,56 @@ ui <- navbarPage(
     "Continuous + Categorical",
     sidebarLayout(
       sidebarPanel(
-        sliderInput("n",
-                    "Sample size:",
-                    min = 10,
-                    max = 200,
-                    value = 100,
-                    step = 2),
-        checkboxInput("raw",
+        splitLayout(
+          cellWidths = "50%",
+          sliderInput("n_cont_cat",
+                      "Sample size:",
+                      min = 50,
+                      max = 250,
+                      value = 150,
+                      step = 10),
+          sliderInput("error_cont_cat",
+                      "SD:",
+                      min = 0,
+                      max = 1,
+                      value = 0.5,
+                      step = 0.1)
+        ),
+        splitLayout(
+          cellWidths = "50%",
+          sliderInput("int_a",
+                      "Intercept A:",
+                      min = -5,
+                      max = 5,
+                      value = 0),
+          sliderInput("slope_a",
+                      "Slope A:",
+                      min = -1,
+                      max = 3,
+                      step = 0.1,
+                      value = 1)
+        ),
+        splitLayout(
+          cellWidths = "50%",
+          sliderInput("int_b",
+                      "Intercept B:",
+                      min = -5,
+                      max = 5,
+                      value = 0),
+          sliderInput("slope_b",
+                      "Slope B:",
+                      min = -1,
+                      max = 3,
+                      step = 0.1,
+                      value = 1)
+        ),
+        checkboxInput("raw_cont_cat",
                       "Show raw data",
-                      FALSE),
-        h3("Group A"),
-        sliderInput("intercept",
-                    "Intercept (A):",
-                    min = -5,
-                    max = 5,
-                    value = 0),
-        sliderInput("slope",
-                    "Slope (A):",
-                    min = -1,
-                    max = 3,
-                    step = 0.1,
-                    value = 1),
-        h3("Group B"),
-        checkboxInput("group_b",
-                      "Include Group B?",
-                      FALSE),
-        sliderInput("intercept_b",
-                    "Intercept (B):",
-                    min = -5,
-                    max = 5,
-                    value = 0),
-        sliderInput("slope_b",
-                    "Slope (B):",
-                    min = -1,
-                    max = 3,
-                    step = 0.1,
-                    value = 1),
-        h3("Model formula"),
-        checkboxInput("interactions",
-                      "Include the interaction X*Group?",
                       FALSE),
       ),
 
       mainPanel(
-        plotOutput("lines")
+        plotOutput("cont_cat")
       )
     )
   )
@@ -252,31 +258,40 @@ server <- function(input, output) {
   output$cont_cat <- renderPlot({
     set.seed(8788)
 
-    n <- input$n
-    the_intercept <- input$intercept
-    the_slope <- input$slope
-    the_error <- input$error
+    n_cc <- input$n_cont_cat
+    n_2 <- input$n_cont_cat / 2
+    the_intercept_a <- input$int_a
+    the_slope_a <- input$slope_a
+    the_intercept_b <- input$int_b
+    the_slope_b <- input$slope_b
+    the_error <- input$error_cont_cat
 
-    x <- sample(the_seq_1, n)
-    y <- the_intercept + the_slope * x + rnorm(n, 0, the_error)
+    x <- sample(the_seq_1, n_cc)
+    y_a <- the_intercept_a + the_slope_a * x[1:n_2] + rnorm(n_2, 0, the_error)
+    y_b <- the_intercept_b + the_slope_b * x[(n_2+1):n_cc] + rnorm(n_2, 0, the_error)
 
     tib <- tibble(
       x = x,
-      y = y
+      y = c(y_a, y_b),
+      group = rep(c("A", "B"), each = n_cc/2)
     )
 
-    ggplot(tib, aes(x, y)) +
+    ggplot(tib, aes(x, y, colour = group)) +
+      # Axes
       geom_hline(yintercept = 0, linetype = "dashed") +
       geom_vline(xintercept = 0, linetype = "dashed") +
-      {if (input$group_b) aes(colour = group) } +
-      {if (input$raw) geom_point(size = 5, alpha = 0.5) } +
-      geom_abline(intercept = input$intercept, slope = input$slope, size = 2) +
-      geom_point(aes(x = 0, y = input$intercept), size = 5, colour = "red") +
-      {if (input$group_b & !input$interactions) geom_abline(intercept = input$intercept_b, slope = input$slope, size = 2) } +
-      {if (input$group_b & input$interactions) geom_abline(intercept = input$intercept_b, slope = input$slope_b, size = 2) } +
-      {if (input$group_b) geom_point(aes(x = 0, y = input$intercept_b), size = 5, colour = "blue") } +
+      # Raw data
+      {if (input$raw_cont_cat) geom_point(size = 5, alpha = 0.5) } +
+      # Regression line A
+      geom_abline(intercept = the_intercept_a, slope = the_slope_a, size = 2) +
+      geom_point(aes(x = 0, y = the_intercept_a), size = 5, colour = "#a6611a") +
+      # Regression line B
+      geom_abline(intercept = the_intercept_b, slope = the_slope_b, size = 2) +
+      geom_point(aes(x = 0, y = the_intercept_b), size = 5, colour = "#018571") +
+      # Plot settings
       scale_x_continuous(breaks = the_seq, limits = the_limits) +
       scale_y_continuous(breaks = the_seq, limits = the_limits) +
+      scale_colour_manual(values = c("#a6611a", "#018571")) +
       labs(x = "X", y = "Y") +
       coord_fixed() +
       theme_minimal() +
