@@ -15,7 +15,7 @@ library(ggplot2)
 ui <- navbarPage(
 
   # Application title
-  "A linear model",
+  "Linear models illustrated",
 
   tabPanel(
     "Continuous",
