@@ -14,8 +14,11 @@ library(ggplot2)
 # Define UI for application that draws a histogram
 ui <- navbarPage(
 
+
   # Application title
   "Linear models illustrated",
+  tags$style(HTML(".js-irs-2 .irs-single, .js-irs-2 .irs-bar-edge, .js-irs-2 .irs-bar {background: #1b9e77}")),
+  tags$style(HTML(".js-irs-3 .irs-single, .js-irs-3 .irs-bar-edge, .js-irs-3 .irs-bar {background: #d95f02}")),
 
   tabPanel(
     "Continuous",
@@ -53,7 +56,7 @@ ui <- navbarPage(
         ),
         checkboxInput("raw",
                       "Show raw data",
-                      FALSE)
+                      TRUE)
       ),
 
       mainPanel(
@@ -192,7 +195,7 @@ server <- function(input, output) {
     geom_hline(yintercept = 0, linetype = "dashed") +
     geom_vline(xintercept = 0, linetype = "dashed") +
     # Show raw data
-    {if (input$raw) geom_point(size = 5, alpha = 0.5) } +
+    {if (input$raw) geom_point(size = 3, alpha = 0.3) } +
     # Regression line
     geom_abline(intercept = the_intercept, slope = the_slope, size = 2) +
     # Intercept
@@ -207,6 +210,10 @@ server <- function(input, output) {
     ) +
     geom_segment(
       x = 0, y = the_intercept, xend = 1, yend = the_intercept,
+      linetype = "dotted", colour = "#d95f02"
+    ) +
+    geom_segment(
+      x = -Inf, y = the_intercept + the_slope, xend = 1, yend = the_intercept + the_slope,
       linetype = "dotted", colour = "#d95f02"
     ) +
     geom_segment(
