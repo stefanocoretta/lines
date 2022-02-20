@@ -182,11 +182,35 @@ server <- function(input, output) {
     )
 
     ggplot(tib, aes(x, y)) +
+    # Axes
     geom_hline(yintercept = 0, linetype = "dashed") +
     geom_vline(xintercept = 0, linetype = "dashed") +
+    # Show raw data
     {if (input$raw) geom_point(size = 5, alpha = 0.5) } +
+    # Regression line
     geom_abline(intercept = the_intercept, slope = the_slope, size = 2) +
-    geom_point(aes(x = 0, y = the_intercept), size = 5, colour = "red") +
+    # Intercept
+    geom_segment(
+      x = -Inf, y = the_intercept, xend = 0, yend = the_intercept,
+      linetype = "dotted", colour = "#1b9e77"
+    ) +
+    # Slope
+    geom_segment(
+      x = 1, y = -Inf, xend = 1, yend = the_intercept + the_slope,
+      linetype = "dotted", colour = "#d95f02"
+    ) +
+    geom_segment(
+      x = 0, y = the_intercept, xend = 1, yend = the_intercept,
+      linetype = "dotted", colour = "#d95f02"
+    ) +
+    geom_segment(
+      x = 1, y = the_intercept, xend = 1, yend = the_intercept + the_slope,
+      size = 1, colour = "#d95f02"
+    ) +
+    # Intercept and slope points
+    geom_point(aes(x = 0, y = the_intercept), size = 5, colour = "#1b9e77") +
+    geom_point(aes(x = 1, y = the_intercept + the_slope), size = 5, colour = "#d95f02") +
+    # Plot settings
     scale_x_continuous(breaks = the_seq, limits = the_limits) +
     scale_y_continuous(breaks = the_seq, limits = the_limits) +
     labs(x = "X", y = "Y") +
@@ -215,9 +239,10 @@ server <- function(input, output) {
       group = group
     )
 
-    ggplot(tib, aes(group, y)) +
+    ggplot(tib, aes(group, y, colour = group)) +
       geom_jitter(width = 0.2, size = 5, alpha = 0.5) +
       scale_y_continuous(breaks = the_seq, limits = the_limits) +
+      scale_color_manual(values = c("#1f78b4", "#33a02c")) +
       theme_minimal() +
       theme(legend.position = "none")},
 
