@@ -156,7 +156,7 @@ ui <- navbarPage(
                       "$\\beta_1$:",
                       min = -3,
                       max = 3,
-                      step = 0.5,
+                      step = 0.1,
                       value = 1)
         ),
         splitLayout(
@@ -165,13 +165,13 @@ ui <- navbarPage(
                       "$\\beta_2$:",
                       min = -3,
                       max = 3,
-                      step = 0.5,
+                      step = 0.1,
                       value = 0),
           sliderInput("beta_3",
                       "$\\beta_3$:",
                       min = -3,
                       max = 3,
-                      step = 0.5,
+                      step = 0.1,
                       value = 0)
         ),
 
