@@ -21,6 +21,10 @@ ui <- navbarPage(
   tags$style(HTML(".js-irs-1 .irs-single, .js-irs-1 .irs-bar-edge, .js-irs-1 .irs-bar {background: #d95f02}")),
   tags$style(HTML(".js-irs-5 .irs-single, .js-irs-5 .irs-bar-edge, .js-irs-5 .irs-bar {background: #1b9e77}")),
   tags$style(HTML(".js-irs-6 .irs-single, .js-irs-6 .irs-bar-edge, .js-irs-6 .irs-bar {background: #d95f02}")),
+  tags$style(HTML(".js-irs-7 .irs-single, .js-irs-8 .irs-bar-edge, .js-irs-7 .irs-bar {background: #a6611a}")),
+  tags$style(HTML(".js-irs-8 .irs-single, .js-irs-9 .irs-bar-edge, .js-irs-8 .irs-bar {background: #dfc27d}")),
+  tags$style(HTML(".js-irs-9 .irs-single, .js-irs-10 .irs-bar-edge, .js-irs-9 .irs-bar {background: #80cdc1}")),
+  tags$style(HTML(".js-irs-10 .irs-single, .js-irs-11 .irs-bar-edge, .js-irs-10 .irs-bar {background: #018571}")),
   tags$div(HTML("<script type='text/x-mathjax-config' >
             MathJax.Hub.Config({
             tex2jax: {inlineMath: [['$','$']]}
@@ -163,9 +167,9 @@ ui <- navbarPage(
           cellWidths = "50%",
           sliderInput("beta_2",
                       "$\\beta_2$:",
-                      min = -3,
-                      max = 3,
-                      step = 0.1,
+                      min = -5,
+                      max = 5,
+                      step = 0.5,
                       value = 0),
           sliderInput("beta_3",
                       "$\\beta_3$:",
@@ -333,7 +337,7 @@ server <- function(input, output) {
       group = group
     )
 
-    ggplot(tib, aes(x, y, colour = group)) +
+    ggplot(tib, aes(x, y)) +
       # Axes
       geom_hline(yintercept = 0, linetype = "dashed") +
       geom_vline(xintercept = 0, linetype = "dashed") +
@@ -343,6 +347,20 @@ server <- function(input, output) {
       geom_abline(intercept = the_beta_0, slope = the_beta_1, size = 2) +
       # Regression line B
       geom_abline(intercept = the_beta_0 + the_beta_2, slope = the_beta_1 + the_beta_3, size = 2) +
+      # Beta 0
+      geom_point(x = 0, y = the_beta_0, size = 5, colour = "#a6611a") +
+      geom_segment(x = 0, y = 0, xend = 0, yend = the_beta_0, size = 3, colour = "#a6611a") +
+      # Beta 1
+      geom_point(x = 1, y = the_beta_0 + the_beta_1, size = 5, colour = "#dfc27d") +
+      geom_point(x = 1, y = the_beta_0 + the_beta_1 + the_beta_2, size = 5, colour = "#dfc27d") +
+      geom_segment(x = 1, y = the_beta_0, xend = 1, yend = the_beta_0 + the_beta_1, size = 3, colour = "#dfc27d") +
+      geom_segment(x = 1, y = the_beta_0 + the_beta_2, xend = 1, yend = the_beta_0 + the_beta_1 + the_beta_2, size = 3, colour = "#dfc27d") +
+      # Beta 2
+      geom_point(x = 0, y = the_beta_0 + the_beta_2, size = 3, colour = "#80cdc1") +
+      geom_segment(x = 0, y = the_beta_0, xend = 0, yend = the_beta_0 + the_beta_2, size = 1.5, colour = "#80cdc1") +
+      # Beta 3
+      geom_point(x = 1, y = the_beta_0 + the_beta_1 + the_beta_2 + the_beta_3, size = 3, colour = "#018571") +
+      geom_segment(x = 1, y = the_beta_0 + the_beta_2 + the_beta_1, xend = 1, yend = the_beta_0 + the_beta_1 + the_beta_2 + the_beta_3, size = 1.5, colour = "#018571") +
       # Plot settings
       scale_x_continuous(breaks = the_seq, limits = the_limits) +
       scale_y_continuous(breaks = the_seq, limits = the_limits) +
