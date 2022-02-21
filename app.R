@@ -17,14 +17,49 @@ ui <- navbarPage(
 
   # Application title
   "Linear models illustrated",
-  tags$style(HTML(".js-irs-2 .irs-single, .js-irs-2 .irs-bar-edge, .js-irs-2 .irs-bar {background: #1b9e77}")),
-  tags$style(HTML(".js-irs-3 .irs-single, .js-irs-3 .irs-bar-edge, .js-irs-3 .irs-bar {background: #d95f02}")),
+  tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {background: #1b9e77}")),
+  tags$style(HTML(".js-irs-1 .irs-single, .js-irs-1 .irs-bar-edge, .js-irs-1 .irs-bar {background: #d95f02}")),
+  tags$div(HTML("<script type='text/x-mathjax-config' >
+            MathJax.Hub.Config({
+            tex2jax: {inlineMath: [['$','$']]}
+            });
+            </script >
+            ")),
 
   tabPanel(
     "Continuous",
     sidebarLayout(
       sidebarPanel(
-        h3("Continuous predictor (X)"),
+        h3("Continuous predictor X"),
+        h4("Instructions"),
+        p("You can adjust the intercept and slope values below to see what happens to the regression line (the solid black line)."),
+        p("Note that the sample size and SD settings do not affect the regression line. Rather, those settings can be changed to generate raw data based on the given intercept and slope values."),
+        h4("Formula"),
+        p(withMathJax("$$y \\sim \\beta_0 + \\beta_1 x$$")),
+        tags$ul(
+          tags$li("$y$: outcome variable"),
+          tags$li("$\\beta_0$: intercept"),
+          tags$li("$\\beta_1$: slope"),
+          tags$li("$x$: predictor X")
+        ),
+        h4("Settings"),
+
+        splitLayout(
+          cellWidths = "50%",
+          sliderInput("intercept",
+                      withMathJax("Intercept $\\beta_0$:"),
+                      min = -5,
+                      max = 5,
+                      value = 0),
+          sliderInput("slope",
+                      "Slope $\\beta_1$:",
+                      min = -3,
+                      max = 3,
+                      step = 0.5,
+                      value = 1)
+        ),
+
+        p("You can adjust the following settings to generate random data based on the given intercept and slope values."),
         splitLayout(
           cellWidths = "50%",
           sliderInput("n",
@@ -40,23 +75,8 @@ ui <- navbarPage(
                       value = 0.5,
                       step = 0.1)
         ),
-
-        splitLayout(
-          cellWidths = "50%",
-          sliderInput("intercept",
-                      "Intercept:",
-                      min = -5,
-                      max = 5,
-                      value = 0),
-          sliderInput("slope",
-                      "Slope:",
-                      min = -1,
-                      max = 3,
-                      step = 0.1,
-                      value = 1)
-        ),
         checkboxInput("raw",
-                      "Show raw data",
+                      "Show generated data",
                       TRUE)
       ),
 
