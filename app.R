@@ -19,6 +19,8 @@ ui <- navbarPage(
   "Linear models illustrated",
   tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {background: #1b9e77}")),
   tags$style(HTML(".js-irs-1 .irs-single, .js-irs-1 .irs-bar-edge, .js-irs-1 .irs-bar {background: #d95f02}")),
+  tags$style(HTML(".js-irs-5 .irs-single, .js-irs-5 .irs-bar-edge, .js-irs-5 .irs-bar {background: #1b9e77}")),
+  tags$style(HTML(".js-irs-6 .irs-single, .js-irs-6 .irs-bar-edge, .js-irs-6 .irs-bar {background: #d95f02}")),
   tags$div(HTML("<script type='text/x-mathjax-config' >
             MathJax.Hub.Config({
             tex2jax: {inlineMath: [['$','$']]}
@@ -89,7 +91,9 @@ ui <- navbarPage(
     "Categorical",
     sidebarLayout(
       sidebarPanel(
-        h3("Categorical predictor (Group)"),
+        h3("Categorical predictor Group"),
+        h4("Instructions"),
+        p("You can adjust the intercept and slope values below to see what happens to the means of Group A and B (the big diamonds)."),
 
         sliderInput("n_cat",
                     "Sample size:",
@@ -273,12 +277,12 @@ server <- function(input, output) {
     }
 
     ggplot(tib) +
-      geom_jitter(aes(group, y, colour = group), width = 0.2, size = 3, alpha = 0.3) +
-      {if (input$coding == "treat") geom_point(x = "A", y = the_intercept, size = 10, colour = "#1f78b4", shape = 18) } +
-      {if (input$coding == "treat") geom_point(x = "B", y = the_intercept + the_slope, size = 10, colour = "#33a02c", shape = 18) } +
-      {if (input$coding == "sum") geom_point(x = "A", y = the_a, size = 10, colour = "#1f78b4", shape = 18) } +
-      {if (input$coding == "sum") geom_point(x = "B", y = the_b, size = 10, colour = "#33a02c", shape = 18) } +
-      {if (input$coding == "sum") geom_point(x = 1.5, y = the_intercept, size = 5, colour = "#d95f02", shape = 16) } +
+      geom_jitter(aes(group, y), width = 0.2, size = 3, alpha = 0.3) +
+      {if (input$coding == "treat") geom_point(x = "A", y = the_intercept, size = 10, colour = "#1b9e77", shape = 18) } +
+      {if (input$coding == "treat") geom_point(x = "B", y = the_intercept + the_slope, size = 10, colour = "#d95f02", shape = 18) } +
+      {if (input$coding == "sum") geom_point(x = "A", y = the_a, size = 10, colour = "#d95f02", shape = 18) } +
+      {if (input$coding == "sum") geom_point(x = "B", y = the_b, size = 10, colour = "#d95f02", shape = 18) } +
+      {if (input$coding == "sum") geom_point(x = 1.5, y = the_intercept, size = 5, colour = "#1b9e77", shape = 16) } +
       scale_y_continuous(breaks = the_seq, limits = the_limits) +
       scale_color_manual(values = c("#1f78b4", "#33a02c")) +
       theme_minimal() +
