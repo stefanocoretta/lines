@@ -129,7 +129,53 @@ ui <- navbarPage(
     "Continuous + Categorical",
     sidebarLayout(
       sidebarPanel(
-        h3("Continuous (X) and categorical (Group) predictors"),
+        h3("Continuous and categorical predictors"),
+
+        h4("Formula"),
+        p(withMathJax("$$y \\sim \\beta_0 + \\beta_1 x + \\beta_2 \\cdot group + \\beta_3 x \\cdot group$$")),
+        tags$ul(
+          tags$li("$y$: outcome variable"),
+          tags$li("$\\beta_0$: mean Y of Group A"),
+          tags$li("$\\beta_1$: effect of X in Group A"),
+          tags$li("$x$: predictor X"),
+          tags$li("$\\beta_2$: Group B mean Y - Group A mean Y"),
+          tags$li("$group$: predictor Group"),
+          tags$li("$\\beta_3$: effect of X in Group B - effect of X in Group A")
+        ),
+
+        h4("Settings"),
+        splitLayout(
+          cellWidths = "50%",
+          sliderInput("beta_0",
+                      "$\\beta_0$:",
+                      min = -5,
+                      max = 5,
+                      step = 0.5,
+                      value = 0),
+          sliderInput("beta_1",
+                      "$\\beta_1$:",
+                      min = -3,
+                      max = 3,
+                      step = 0.5,
+                      value = 1)
+        ),
+        splitLayout(
+          cellWidths = "50%",
+          sliderInput("beta_2",
+                      "$\\beta_2$:",
+                      min = -3,
+                      max = 3,
+                      step = 0.5,
+                      value = 0),
+          sliderInput("beta_3",
+                      "$\\beta_3$:",
+                      min = -3,
+                      max = 3,
+                      step = 0.5,
+                      value = 0)
+        ),
+
+        p("You can adjust the following settings to generate random data based on the given parameter values."),
         splitLayout(
           cellWidths = "50%",
           sliderInput("n_cont_cat",
@@ -145,38 +191,8 @@ ui <- navbarPage(
                       value = 0.5,
                       step = 0.1)
         ),
-        h4("Group A"),
-        splitLayout(
-          cellWidths = "50%",
-          sliderInput("int_a",
-                      "Intercept A:",
-                      min = -5,
-                      max = 5,
-                      value = 0),
-          sliderInput("slope_a",
-                      "Slope A:",
-                      min = -1,
-                      max = 3,
-                      step = 0.1,
-                      value = 1)
-        ),
-        h4("Group B"),
-        splitLayout(
-          cellWidths = "50%",
-          sliderInput("int_b",
-                      "Intercept B:",
-                      min = -5,
-                      max = 5,
-                      value = 0),
-          sliderInput("slope_b",
-                      "Slope B:",
-                      min = -1,
-                      max = 3,
-                      step = 0.1,
-                      value = 1)
-        ),
         checkboxInput("raw_cont_cat",
-                      "Show raw data",
+                      "Show generated data",
                       FALSE),
       ),
 
@@ -296,20 +312,25 @@ server <- function(input, output) {
 
     n_cc <- input$n_cont_cat
     n_2 <- input$n_cont_cat / 2
-    the_intercept_a <- input$int_a
-    the_slope_a <- input$slope_a
-    the_intercept_b <- input$int_b
-    the_slope_b <- input$slope_b
+    the_beta_0 <- input$beta_0
+    the_beta_1 <- input$beta_1
+    the_beta_2 <- input$beta_2
+    the_beta_3 <- input$beta_3
+    group <- rep(c("A", "B"), each = n_2)
+    group_treat <- rep(c(0, 1), each = n_2)
     the_error <- input$error_cont_cat
 
     x <- sample(the_seq_1, n_cc)
-    y_a <- the_intercept_a + the_slope_a * x[1:n_2] + rnorm(n_2, 0, the_error)
-    y_b <- the_intercept_b + the_slope_b * x[(n_2+1):n_cc] + rnorm(n_2, 0, the_error)
+    y <- the_beta_0 +
+      the_beta_1 * x +
+      the_beta_2 * group_treat +
+      the_beta_3 * x * group_treat +
+      rnorm(n_2, 0, the_error)
 
     tib <- tibble(
       x = x,
-      y = c(y_a, y_b),
-      group = rep(c("A", "B"), each = n_cc/2)
+      y = y,
+      group = group
     )
 
     ggplot(tib, aes(x, y, colour = group)) +
@@ -317,13 +338,11 @@ server <- function(input, output) {
       geom_hline(yintercept = 0, linetype = "dashed") +
       geom_vline(xintercept = 0, linetype = "dashed") +
       # Raw data
-      {if (input$raw_cont_cat) geom_point(size = 5, alpha = 0.5) } +
+      {if (input$raw_cont_cat) geom_point(size = 3, alpha = 0.3) } +
       # Regression line A
-      geom_abline(intercept = the_intercept_a, slope = the_slope_a, size = 2) +
-      geom_point(aes(x = 0, y = the_intercept_a), size = 5, colour = "#a6611a") +
+      geom_abline(intercept = the_beta_0, slope = the_beta_1, size = 2) +
       # Regression line B
-      geom_abline(intercept = the_intercept_b, slope = the_slope_b, size = 2) +
-      geom_point(aes(x = 0, y = the_intercept_b), size = 5, colour = "#018571") +
+      geom_abline(intercept = the_beta_0 + the_beta_2, slope = the_beta_1 + the_beta_3, size = 2) +
       # Plot settings
       scale_x_continuous(breaks = the_seq, limits = the_limits) +
       scale_y_continuous(breaks = the_seq, limits = the_limits) +
