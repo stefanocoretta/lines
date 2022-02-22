@@ -19,12 +19,12 @@ ui <- navbarPage(
   "Linear models illustrated",
   tags$style(HTML(".js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {background: #1b9e77}")),
   tags$style(HTML(".js-irs-1 .irs-single, .js-irs-1 .irs-bar-edge, .js-irs-1 .irs-bar {background: #d95f02}")),
-  tags$style(HTML(".js-irs-5 .irs-single, .js-irs-5 .irs-bar-edge, .js-irs-5 .irs-bar {background: #1b9e77}")),
-  tags$style(HTML(".js-irs-6 .irs-single, .js-irs-6 .irs-bar-edge, .js-irs-6 .irs-bar {background: #d95f02}")),
-  tags$style(HTML(".js-irs-7 .irs-single, .js-irs-8 .irs-bar-edge, .js-irs-7 .irs-bar {background: #a6611a}")),
-  tags$style(HTML(".js-irs-8 .irs-single, .js-irs-9 .irs-bar-edge, .js-irs-8 .irs-bar {background: #dfc27d}")),
-  tags$style(HTML(".js-irs-9 .irs-single, .js-irs-10 .irs-bar-edge, .js-irs-9 .irs-bar {background: #80cdc1}")),
-  tags$style(HTML(".js-irs-10 .irs-single, .js-irs-11 .irs-bar-edge, .js-irs-10 .irs-bar {background: #018571}")),
+  tags$style(HTML(".js-irs-4 .irs-single, .js-irs-4 .irs-bar-edge, .js-irs-4 .irs-bar {background: #1b9e77}")),
+  tags$style(HTML(".js-irs-5 .irs-single, .js-irs-5 .irs-bar-edge, .js-irs-5 .irs-bar {background: #d95f02}")),
+  tags$style(HTML(".js-irs-8 .irs-single, .js-irs-8 .irs-bar-edge, .js-irs-8 .irs-bar {background: #a6611a}")),
+  tags$style(HTML(".js-irs-9 .irs-single, .js-irs-9 .irs-bar-edge, .js-irs-9 .irs-bar {background: #dfc27d}")),
+  tags$style(HTML(".js-irs-10 .irs-single, .js-irs-10 .irs-bar-edge, .js-irs-10 .irs-bar {background: #80cdc1}")),
+  tags$style(HTML(".js-irs-11 .irs-single, .js-irs-11 .irs-bar-edge, .js-irs-11 .irs-bar {background: #018571}")),
   tags$div(HTML("<script type='text/x-mathjax-config' >
             MathJax.Hub.Config({
             tex2jax: {inlineMath: [['$','$']]}
@@ -36,7 +36,7 @@ ui <- navbarPage(
     "Continuous",
     sidebarLayout(
       sidebarPanel(
-        h3("Continuous predictor X"),
+        h3("Continuous predictor"),
         h4("Instructions"),
         p("You can adjust the intercept and slope values below to see what happens to the regression line (the solid black line)."),
         p("Note that the sample size and SD settings do not affect the regression line. Rather, those settings can be changed to generate raw data based on the given intercept and slope values."),
@@ -95,33 +95,59 @@ ui <- navbarPage(
     "Categorical",
     sidebarLayout(
       sidebarPanel(
-        h3("Categorical predictor Group"),
+        h3("Categorical predictor"),
         h4("Instructions"),
-        p("You can adjust the intercept and slope values below to see what happens to the means of Group A and B (the big diamonds)."),
-
-        sliderInput("n_cat",
-                    "Sample size:",
-                    min = 50,
-                    max = 250,
-                    value = 150,
-                    step = 10),
+        p("You can adjust the intercept and slope values below to see what happens to the means of Group A and B (the big coloured diamonds in the plot)."),
+        h4("Formula"),
+        p(withMathJax("$$y \\sim \\beta_0 + \\beta_1 \\cdot group$$")),
+        tags$ul(
+          tags$li("$y$: outcome variable"),
+          tags$li("$group$: predictor Group")
+        ),
+        p("If $group$ is coded using treatment contrasts:"),
+        tags$ul(
+          tags$li("$\\beta_0$: mean Y in Group A"),
+          tags$li("$\\beta_1$: Group B mean Y - Group A mean Y")
+        ),
+        p("If $group$ is coded using sum contrasts:"),
+        tags$ul(
+          tags$li("$\\beta_0$: grand mean Y"),
+          tags$li("$\\beta_1$: Group A mean Y - grand mean Y")
+        ),
+        h4("Settings"),
         selectInput("coding",
                     "Coding:",
                     c("Treatment/dummy" = "treat", "Sum/effect" = "sum")),
         splitLayout(
           cellWidths = "50%",
           sliderInput("int_cat",
-                      "Intercept:",
+                      "$\\beta_0$:",
                       min = -5,
                       max = 5,
                       value = 0),
           sliderInput("slope_cat",
-                      "Slope:",
+                      "$\\beta_1$:",
                       min = -3,
                       max = 3,
                       step = 0.5,
                       value = 0)
-        )
+        ),
+        p("You can adjust the following settings used to generate random data based on the given model parameters."),
+        splitLayout(
+          cellWidths = "50%",
+          sliderInput("n_cat",
+                      "Sample size:",
+                      min = 50,
+                      max = 250,
+                      value = 150,
+                      step = 10),
+          sliderInput("error_cat",
+                      "SD:",
+                      min = 0,
+                      max = 3,
+                      value = 0.5,
+                      step = 0.1)
+        ),
       ),
 
       mainPanel(
@@ -277,6 +303,7 @@ server <- function(input, output) {
     set.seed(8788)
 
     n <- input$n_cat
+    error <- input$error_cat
     the_intercept <- input$int_cat
     the_slope <- input$slope_cat
 
@@ -284,8 +311,8 @@ server <- function(input, output) {
       group = rep(c("A", "B"), each = n/2),
       group_treat = rep(c(0, 1), each = n/2),
       group_sum = rep(c(1, -1), each = n/2),
-      y_treat = the_intercept + (the_slope * group_treat) + rnorm(n, 0, 0.5),
-      y_sum = the_intercept + (the_slope * group_sum) + rnorm(n, 0, 0.5)
+      y_treat = the_intercept + (the_slope * group_treat) + rnorm(n, 0, error),
+      y_sum = the_intercept + (the_slope * group_sum) + rnorm(n, 0, error)
     )
 
     if (input$coding == "treat") {
@@ -300,9 +327,12 @@ server <- function(input, output) {
       geom_jitter(aes(group, y), width = 0.2, size = 3, alpha = 0.3) +
       {if (input$coding == "treat") geom_point(x = "A", y = the_intercept, size = 10, colour = "#1b9e77", shape = 18) } +
       {if (input$coding == "treat") geom_point(x = "B", y = the_intercept + the_slope, size = 10, colour = "#d95f02", shape = 18) } +
+      {if (input$coding == "treat") geom_segment(x = "B", y = the_intercept, xend = "B", yend = the_intercept + the_slope, size = 3, colour = "#d95f02") } +
       {if (input$coding == "sum") geom_point(x = "A", y = the_a, size = 10, colour = "#d95f02", shape = 18) } +
       {if (input$coding == "sum") geom_point(x = "B", y = the_b, size = 10, colour = "#d95f02", shape = 18) } +
       {if (input$coding == "sum") geom_point(x = 1.5, y = the_intercept, size = 5, colour = "#1b9e77", shape = 16) } +
+      {if (input$coding == "sum") geom_segment(x = "A", y = the_intercept, xend = "A", yend = the_intercept + the_slope, size = 3, colour = "#d95f02") } +
+      {if (input$coding == "sum") geom_segment(x = "B", y = the_intercept, xend = "B", yend = the_intercept - the_slope, size = 3, colour = "#d95f02") } +
       scale_y_continuous(breaks = the_seq, limits = the_limits) +
       scale_color_manual(values = c("#1f78b4", "#33a02c")) +
       theme_minimal() +
