@@ -10,6 +10,7 @@
 library(shiny)
 library(tibble)
 library(ggplot2)
+library(lme4)
 
 # Define UI for application that draws a histogram
 ui <- navbarPage(
@@ -230,6 +231,25 @@ ui <- navbarPage(
         plotOutput("cont_cat")
       )
     )
+  ),
+  tabPanel(
+    "Hierarchical",
+    sidebarLayout(
+      sidebarPanel(
+        h3("Hierarchical models (aka mixed-effects)"),
+        splitLayout(
+          radioButtons("effects",
+                      "Random effects:",
+                      c("No random effects" = "noranef",
+                        "Random intercepts only" = "ranint",
+                        "Random intercepts and slopes" = "ranslo"))
+          )
+      ),
+
+      mainPanel(
+        plotOutput("hierarchical")
+      )
+    )
   )
 )
 
@@ -398,6 +418,73 @@ server <- function(input, output) {
       labs(x = "X", y = "Y") +
       coord_fixed() +
       theme_minimal() +
+      theme(legend.position = "none")},
+
+    height = 600, res = 100
+  )
+
+  output$hierarchical <- renderPlot({
+    set.seed(8788)
+
+    n_h <- 300
+    x <- sample(seq(-20, 150, by = 0.1), n_h)
+    int <- 4
+    int_i <- rep(c(-3, 2, 0.5, 1, 1.1), each = n_h / 5)
+    slo <- 0.03
+    slo_i <- rep(c(0.01, -0.025, 0.02, -0.05, 0.03), each = n_h / 5)
+
+    y <- (int + int_i) +
+      (slo + slo_i) * x +
+      rnorm(n_h, 0, 0.5)
+
+    tib <- tibble(
+      x = x,
+      y = y,
+      id = rep(c("A", "B", "C", "D", "E"), each = n_h / 5)
+    )
+
+    if (input$effects == "noranef") {
+      tib_lm <- lm(y ~ x, data = tib)
+      lm_int <- coef(tib_lm)[1]
+      lm_slo <- coef(tib_lm)[2]
+    } else if (input$effects == "ranint") {
+      tib_lm_int <- lmer(y ~ x + (1 | id), data = tib)
+      lm_int <- fixef(tib_lm_int)[1]
+      lm_slo <- fixef(tib_lm_int)[2]
+      lm_int_coef <- coef(tib_lm_int)$id$`(Intercept)`
+    } else {
+      tib_lm_slo <- lmer(y ~ x + (x | id), data = tib)
+      lm_int <- fixef(tib_lm_slo)[1]
+      lm_slo <- fixef(tib_lm_slo)[2]
+      lm_int_coef <- coef(tib_lm_slo)$id$`(Intercept)`
+      lm_slo_coef <- coef(tib_lm_slo)$id$x
+    }
+
+    ggplot(tib, aes(x, y)) +
+      # Axes
+      geom_hline(yintercept = 0, linetype = "dashed") +
+      geom_vline(xintercept = 0, linetype = "dashed") +
+      # Raw data
+      geom_point(aes(colour = id, shape = id), size = 3, alpha = 0.8) +
+      geom_abline(intercept = lm_int, slope = lm_slo, size = 1, colour = "red") +
+      { if (input$effects == "ranint") geom_abline(
+        intercept = lm_int_coef,
+        slope = lm_slo,
+        size = 2,
+        colour = c("#009E73", "#F0E442", "#000000", "#E69F00", "#56B4E9")
+      ) } +
+      { if (input$effects == "ranslo") geom_abline(
+        intercept = lm_int_coef,
+        slope = lm_slo_coef,
+        size = 2,
+        colour = c("#009E73", "#F0E442", "#000000", "#E69F00", "#56B4E9")
+      ) } +
+      scale_color_manual(
+        values = c(
+          "#009E73", "#F0E442", "#000000", "#E69F00", "#56B4E9"
+          )
+      ) +
+      theme_dark() +
       theme(legend.position = "none")},
 
     height = 600, res = 100
