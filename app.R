@@ -157,6 +157,79 @@ ui <- navbarPage(
     )
   ),
   tabPanel(
+    "Categorical + Categorical",
+    sidebarLayout(
+      sidebarPanel(
+        h3("Two categorical predictors"),
+
+        h4("Formula"),
+        p(withMathJax("$$y \\sim \\beta_0 + \\beta_1 \\cdot group + \\beta_2 \\cdot condition + \\beta_3 group \\cdot condition$$")),
+        tags$ul(
+          tags$li("$y$: outcome variable"),
+          tags$li("$\\beta_0$: mean Y of Group A in Condition 1"),
+          tags$li("$\\beta_1$: Group B mean Y - Group A mean Y in Condition 1"),
+          tags$li("$group$: predictor Group"),
+          tags$li("$\\beta_2$: Condition 1 mean Y - Condition 1 mean Y in Group A"),
+          tags$li("$condition$: predictor Condition"),
+          tags$li("$\\beta_3$: effect of Group B in Condition 2 - effect of Group B in Condition 1")
+        ),
+
+        h4("Settings"),
+        splitLayout(
+          cellWidths = "50%",
+          sliderInput("beta_0",
+                      "$\\beta_0$:",
+                      min = -5,
+                      max = 5,
+                      step = 0.5,
+                      value = 0),
+          sliderInput("beta_1",
+                      "$\\beta_1$:",
+                      min = -3,
+                      max = 3,
+                      step = 0.1,
+                      value = 1)
+        ),
+        splitLayout(
+          cellWidths = "50%",
+          sliderInput("beta_2",
+                      "$\\beta_2$:",
+                      min = -5,
+                      max = 5,
+                      step = 0.5,
+                      value = 0),
+          sliderInput("beta_3",
+                      "$\\beta_3$:",
+                      min = -5,
+                      max = 5,
+                      step = 0.1,
+                      value = 0)
+        ),
+
+        p("You can adjust the following settings to generate random data based on the given parameter values."),
+        splitLayout(
+          cellWidths = "50%",
+          sliderInput("n_cat_cat",
+                      "Sample size:",
+                      min = 250,
+                      max = 450,
+                      value = 350,
+                      step = 10),
+          sliderInput("error_cat_cat",
+                      "SD:",
+                      min = 0,
+                      max = 1,
+                      value = 0.5,
+                      step = 0.1)
+        )
+      ),
+
+      mainPanel(
+        plotOutput("cat_cat")
+      )
+    )
+  ),
+  tabPanel(
     "Continuous + Categorical",
     sidebarLayout(
       sidebarPanel(
@@ -358,6 +431,54 @@ server <- function(input, output) {
       theme_minimal() +
       theme(legend.position = "none")},
 
+    height = 600, res = 100
+  )
+
+  output$cat_cat <- renderPlot({
+    set.seed(8788)
+
+    n_cc <- input$n_cat_cat
+    n_2 <- input$n_cat_cat / 2
+    the_beta_0 <- input$beta_0
+    the_beta_1 <- input$beta_1
+    the_beta_2 <- input$beta_2
+    the_beta_3 <- input$beta_3
+    group <- rep(c("A", "B"), each = n_2)
+    group_treat <- rep(c(0, 1), each = n_2)
+    group_error <- input$error_cat_cat
+    condition <- rep(c("1", "2"), length.out = n_cc)
+    condition_treat <- rep(c(0, 1), length.out = n_cc)
+    condition_error <- input$error_cat_cat
+
+    y <- the_beta_0 +
+      the_beta_1 * group_treat +
+      the_beta_2 * condition_treat +
+      the_beta_3 * group_treat * condition_treat +
+      rnorm(n_2, 0, group_error)
+
+    tib <- tibble(
+      y = y,
+      group = group,
+      condition = condition
+    )
+
+    ggplot(tib) +
+      # Axes
+      geom_hline(yintercept = 0, linetype = "dashed") +
+      # Raw data
+      geom_jitter(aes(group, y, colour = condition), size = 3, alpha = 0.3, position = position_jitterdodge(dodge.width = 1, jitter.width = 0.2)) +
+      {if (input$coding == "treat") geom_point(x = "A", y = the_beta_0, size = 10, colour = "#1b9e77", shape = 18) } +
+      {if (input$coding == "treat") geom_point(x = "B", y = the_beta_0 + the_beta_1, size = 10, colour = "#d95f02", shape = 18) } +
+      {if (input$coding == "treat") geom_segment(x = "B", y = the_beta_0, xend = "B", yend = the_beta_0 + the_beta_1, size = 3, colour = "#d95f02") } +
+      # {if (input$coding == "sum") geom_point(x = "A", y = the_a, size = 10, colour = "#d95f02", shape = 18) } +
+      # {if (input$coding == "sum") geom_point(x = "B", y = the_b, size = 10, colour = "#d95f02", shape = 18) } +
+      # {if (input$coding == "sum") geom_point(x = 1.5, y = the_intercept, size = 5, colour = "#1b9e77", shape = 16) } +
+      # {if (input$coding == "sum") geom_segment(x = "A", y = the_intercept, xend = "A", yend = the_intercept + the_slope, size = 3, colour = "#d95f02") } +
+      # {if (input$coding == "sum") geom_segment(x = "B", y = the_intercept, xend = "B", yend = the_intercept - the_slope, size = 3, colour = "#d95f02") } +
+      scale_y_continuous(breaks = the_seq, limits = the_limits) +
+      scale_color_manual(values = c("#1f78b4", "#33a02c")) +
+      theme_minimal() +
+      theme(legend.position = "top")},
     height = 600, res = 100
   )
 
