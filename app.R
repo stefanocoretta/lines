@@ -462,19 +462,18 @@ server <- function(input, output) {
       condition = condition
     )
 
+    tib_eff <- tibble(
+      effect = c(the_beta_0, the_beta_0 + the_beta_1, the_beta_0 + the_beta_2, the_beta_0 + the_beta_1 + the_beta_2 + the_beta_3),
+      group = c("A", "B", "A", "B"),
+      condition = c("1", "1", "2", "2")
+    )
+
     ggplot(tib) +
       # Axes
       geom_hline(yintercept = 0, linetype = "dashed") +
       # Raw data
       geom_jitter(aes(group, y, colour = condition), size = 3, alpha = 0.3, position = position_jitterdodge(dodge.width = 1, jitter.width = 0.2)) +
-      {if (input$coding == "treat") geom_point(x = "A", y = the_beta_0, size = 10, colour = "#1b9e77", shape = 18) } +
-      {if (input$coding == "treat") geom_point(x = "B", y = the_beta_0 + the_beta_1, size = 10, colour = "#d95f02", shape = 18) } +
-      {if (input$coding == "treat") geom_segment(x = "B", y = the_beta_0, xend = "B", yend = the_beta_0 + the_beta_1, size = 3, colour = "#d95f02") } +
-      # {if (input$coding == "sum") geom_point(x = "A", y = the_a, size = 10, colour = "#d95f02", shape = 18) } +
-      # {if (input$coding == "sum") geom_point(x = "B", y = the_b, size = 10, colour = "#d95f02", shape = 18) } +
-      # {if (input$coding == "sum") geom_point(x = 1.5, y = the_intercept, size = 5, colour = "#1b9e77", shape = 16) } +
-      # {if (input$coding == "sum") geom_segment(x = "A", y = the_intercept, xend = "A", yend = the_intercept + the_slope, size = 3, colour = "#d95f02") } +
-      # {if (input$coding == "sum") geom_segment(x = "B", y = the_intercept, xend = "B", yend = the_intercept - the_slope, size = 3, colour = "#d95f02") } +
+      geom_point(data = tib_eff, aes(group, effect, group = condition), size = 6, shape = 18, position = position_dodge(width = 1)) +
       scale_y_continuous(breaks = the_seq, limits = the_limits) +
       scale_color_manual(values = c("#1f78b4", "#33a02c")) +
       theme_minimal() +
